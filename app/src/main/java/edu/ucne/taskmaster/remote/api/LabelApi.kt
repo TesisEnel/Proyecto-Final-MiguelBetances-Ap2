@@ -9,18 +9,18 @@ import retrofit2.http.Path
 
 interface LabelApi {
 
-    @GET("api/Label/{id}")
+    @GET("api/Labels/{id}")
     suspend fun getLabel(@Path("id") id: Int): LabelDto
 
-    @GET("api/Label/")
+    @GET("api/Labels/")
     suspend fun getLabels(): List<LabelDto>
 
-    @GET("api/Label/User/{id}")
+    @GET("api/Labels/User/{id}")
     suspend fun getLabelsFilterByUser(@Path("id") id: Int): List<LabelDto>
 
-    @POST("api/Label/")
+    @POST("api/Labels/")
     suspend fun saveLabel(@Body labelDto: LabelDto?): LabelDto
 
-    @DELETE("api/Label/{id}")
+    @DELETE("api/Labels/{id}")
     suspend fun deleteLabel(@Path("id") id: Int)
 }
