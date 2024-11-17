@@ -2,31 +2,30 @@
 agp = "8.4.2"
 coilCompose = "2.4.0"
 kotlin = "1.9.24"
-coreKtx = "1.13.1"
+coreKtx = "1.15.0"
 junit = "4.13.2"
 junitVersion = "1.2.1"
 espressoCore = "3.6.1"
-lifecycleRuntimeKtx = "2.8.4"
-activityCompose = "1.9.1"
-composeBom = "2024.06.00"
+lifecycleRuntimeKtx = "2.8.7"
+activityCompose = "1.9.3"
+composeBom = "2024.11.00"
 converterMoshi = "2.9.0"
 drawerlayout = "1.2.0"
-gson = "2.10.1"
 hiltAndroid = "2.51"
 hiltNavigationCompose = "1.2.0"
 kotlinxSerializationJson = "1.6.3"
 loggingInterceptor = "4.12.0"
 material = "1.12.0"
-material3 = "1.2.1"
-material3AdaptiveNavigationSuite = "1.3.0-beta05"
+material3 = "1.3.1"
+material3AdaptiveNavigationSuite = "1.3.1"
 material3Common = "1.0.0-alpha01"
 materialCalendarView = "1.9.2"
-moshiKotlin = "1.13.0"
-navigationCompose = "2.8.0-beta06"
+moshiKotlin = "1.14.0"
+navigationCompose = "2.8.4"
 okhttp = "4.12.0"
 retrofit = "2.9.0"
 roomRuntime = "2.6.1"
-foundationLayoutAndroid = "1.7.0-beta02"
+foundationLayoutAndroid = "1.7.5"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -42,7 +41,6 @@ androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "roomRunt
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "roomRuntime" }
 coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilCompose" }
 converter-moshi = { module = "com.squareup.retrofit2:converter-moshi", version.ref = "converterMoshi" }
-gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hiltAndroid" }
 hilt-android-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hiltAndroid" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
