@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import edu.ucne.taskmaster.util.CalendarDataSource
+import edu.ucne.taskmaster.util.Download
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -16,7 +17,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class CalendarViewModel @Inject constructor(
-
+    private val download: Download
 ) : ViewModel() {
 
     private val dataSource by lazy { CalendarDataSource() }
@@ -25,7 +26,10 @@ class CalendarViewModel @Inject constructor(
     val uiState: StateFlow<CalendarUiState> = _uiState.asStateFlow()
 
     init {
+
         viewModelScope.launch {
+            download.downloadTasks()
+            download.downloadlabels()
             _uiState.update { currentState ->
                 currentState.copy(
                     dates = dataSource.getDates(currentState.yearMonth)
@@ -60,6 +64,7 @@ class CalendarViewModel @Inject constructor(
 
     fun toPreviousMonth(prevMonth: YearMonth) {
         viewModelScope.launch {
+
             _uiState.update {
                 it.copy(
                     yearMonth = prevMonth,

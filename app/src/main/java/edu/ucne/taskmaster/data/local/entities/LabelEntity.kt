@@ -7,7 +7,8 @@ import androidx.room.PrimaryKey
 data class LabelEntity(
     @PrimaryKey
     val id: Int,
-    val active: Boolean,
-    val description: String?,
-    val hexColor: String?,
+    val description: String,
+    val hexColor: String,
+    val synchronized: Int // local = 0 , download = 1, upload = 2
 )
+
