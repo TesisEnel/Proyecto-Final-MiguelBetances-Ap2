@@ -1,10 +1,19 @@
 package edu.ucne.taskmaster.remote.dto
 
-class LabelDto(
+import edu.ucne.taskmaster.data.local.entities.LabelEntity
 
-    val Active: Boolean,
-    val Description: String,
-    val HexColor: String = "#FFFFFF",
-    val Id: Int,
-    val UserId: Int,
+data class LabelDto(
+    val description: String?,
+    val hexColor: String = "#FFFFFF",
+    val id: Int,
 )
+
+
+fun LabelDto.toLabelEntity(): LabelEntity {
+    return LabelEntity(
+        id = this.id,
+        description = this.description ?: "N/D",
+        hexColor = this.hexColor,
+        synchronized = 0
+    )
+}
