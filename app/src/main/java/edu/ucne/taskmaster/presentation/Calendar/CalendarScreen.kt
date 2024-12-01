@@ -8,7 +8,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
@@ -22,7 +24,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -40,11 +41,9 @@ import edu.ucne.taskmaster.R
 import edu.ucne.taskmaster.ui.theme.TaskMasterTheme
 import edu.ucne.taskmaster.util.DateUtil
 import edu.ucne.taskmaster.util.getDisplayName
-import java.text.SimpleDateFormat
 import java.time.YearMonth
 import java.util.Calendar
 import java.util.Date
-import java.util.Locale
 
 @Preview(showSystemUi = true)
 @Composable
@@ -64,7 +63,6 @@ fun CalendarScreen(
     onDateSelected: (Date) -> Unit = viewModel::changeSelectedDate
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val datePickerState = rememberDatePickerState()
 
     Scaffold(
         topBar = {
@@ -265,18 +263,47 @@ fun ContentItem(
                 onClickListener(date)
             }
     ) {
-        Text(
-            text = date.dayOfMonth,
-            style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier
-                .align(Alignment.Center)
-                .padding(10.dp)
-        )
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(8.dp)
+        ) {
+            Text(
+                text = date.dayOfMonth,
+                style = MaterialTheme.typography.bodyMedium
+            )
+
+            // Mostrar el número de tareas para este día
+            if (date.tasks.isNotEmpty()) {
+                Text(
+                    text = "${date.tasks.size} tasks",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.padding(top = 4.dp)
+                )
+            }
+
+            // Mostrar las bolitas de prioridad
+            if (date.tasks.isNotEmpty()) {
+                val highestPriority = date.tasks.maxByOrNull { it.priority }?.priority
+                Box(
+                    modifier = Modifier
+                        .padding(top = 4.dp)
+                        .size(10.dp)
+                        .background(
+                            color = highestPriority?.let { getPriorityColor(it) } ?: Color.Gray,
+                            shape = CircleShape
+                        )
+                )
+            }
+        }
     }
 }
 
-fun convertMillisToDate(millis: Long): String {
-    val formatter = SimpleDateFormat("MM/dd/yyyy", Locale.getDefault())
-    return formatter.format(Date(millis))
+fun getPriorityColor(priority: Int): Color {
+    return when (priority) {
+        1 -> Color.Red // Alta prioridad
+        2 -> Color.Yellow // Media prioridad
+        3 -> Color.Green // Baja prioridad
+        else -> Color.Gray // Prioridad desconocida
+    }
 }
-

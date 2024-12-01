@@ -15,4 +15,7 @@ sealed class Screen {
     @Serializable
     object Label : Screen()
 
+    @Serializable
+    data object LoginScreen : Screen()
+
 }
