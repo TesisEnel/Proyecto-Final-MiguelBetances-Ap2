@@ -63,7 +63,7 @@ fun TaskListScreen(
                     titleContentColor = Color.White
                 ),
                 actions = {
-                    IconButton(onClick = { /* TODO: Search action */ }) {
+                    IconButton(onClick = { /* hola */ }) {
                         Icon(
                             Icons.Filled.Search,
                             contentDescription = "Search",
