@@ -40,6 +40,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import edu.ucne.taskmaster.data.local.entities.LabelEntity
 import edu.ucne.taskmaster.data.local.entities.TaskEntity
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.util.Date
 
 
@@ -170,7 +172,7 @@ fun TaskItem(task: TaskEntity, labels: List<LabelEntity>) {
 
         // Fecha de vencimiento con colores dinámicos
         Text(
-            text = "Due Date: ${task.dueDate}",
+            text = "Due Date: " + formatDueDateAndTime(task.dueDate),
             color = dueDateColor,
             style = MaterialTheme.typography.bodyMedium
         )
@@ -220,7 +222,7 @@ fun LabelTag(label: LabelEntity) {
 
 fun calculateDueDateColor(dueDate: Date): Color {
     val localDueDate = dueDate.toInstant()
-        .atZone(java.time.ZoneId.systemDefault())
+        .atZone(ZoneId.systemDefault())
         .toLocalDate()
 
     val now = java.time.LocalDate.now()
@@ -233,5 +235,12 @@ fun calculateDueDateColor(dueDate: Date): Color {
     }
 }
 
+fun formatDueDateAndTime(dueDate: Date): String {
+    val localDateTime = dueDate.toInstant().atZone(ZoneId.systemDefault())
+        .toLocalDateTime() // Convierte Date a LocalDateTime
+    val formatter =
+        DateTimeFormatter.ofPattern("MMMM dd, yyyy hh:mm a") // Patrón con hora y minutos
+    return localDateTime.format(formatter)
+}
 
 
