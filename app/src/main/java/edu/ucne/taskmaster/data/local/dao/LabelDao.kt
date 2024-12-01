@@ -24,4 +24,5 @@ interface LabelDao {
 
     @Delete
     suspend fun delete(label: LabelEntity)
+    
 }
