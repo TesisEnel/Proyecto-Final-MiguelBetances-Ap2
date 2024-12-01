@@ -1,5 +1,6 @@
 package edu.ucne.taskmaster.data.local.dao
 
+import androidx.paging.PagingSource
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
@@ -46,4 +47,14 @@ interface TaskDao {
     @Query("DELETE FROM Tasks WHERE TaskId = :id")
     suspend fun deleteById(id: Int)
 
+    @Query(
+        """
+        SELECT * FROM Tasks
+        ORDER BY TaskId ASC
+        LIMIT :limit OFFSET :offset
+        """
+    )
+    fun getTasksPaging(limit: Int, offset: Int): PagingSource<Int, TaskEntity>
 }
+
+

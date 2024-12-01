@@ -22,8 +22,8 @@ class UserRepository @Inject constructor(
         try {
             emit(Resource.Loading())
             val userApi = userRemote.getUser(id)
-            val userRoom = userApi.toUserEntity()  // Convertir el DTO a entidad
-            userDao.saveUser(userRoom)  // Guardar en la base de datos local
+            val userRoom = userApi.toUserEntity()
+            userDao.saveUser(userRoom)
 
             emit(Resource.Success(userRoom))
         } catch (e: HttpException) {
@@ -39,8 +39,8 @@ class UserRepository @Inject constructor(
         try {
             emit(Resource.Loading())
             val usersApi = userRemote.getAllUser()
-            val usersRoom = usersApi.map { it.toUserEntity() }  // Convertir cada DTO a entidad
-            usersRoom.forEach { userDao.saveUser(it) }  // Guardar todos los usuarios en la base de datos local
+            val usersRoom = usersApi.map { it.toUserEntity() }
+            usersRoom.forEach { userDao.saveUser(it) }
 
             emit(Resource.Success(usersRoom))
         } catch (e: HttpException) {
@@ -56,8 +56,8 @@ class UserRepository @Inject constructor(
         try {
             emit(Resource.Loading())
             val userApi = userRemote.SaveUser(userDto)
-            val userRoom = userApi.toUserEntity()  // Convertir el DTO a entidad
-            userDao.saveUser(userRoom)  // Guardar o actualizar el usuario en la base de datos local
+            val userRoom = userApi.toUserEntity()
+            userDao.saveUser(userRoom)
 
             emit(Resource.Success(userRoom))
         } catch (e: HttpException) {
@@ -71,22 +71,22 @@ class UserRepository @Inject constructor(
     // Eliminar un usuario
     suspend fun deleteUser(id: Int): Resource<Unit> {
         return try {
-            userRemote.DeleteUser(id)  // Eliminar usuario en el servidor remoto
-            val userRoom = userDao.getUser(id)  // Obtener usuario localmente
+            userRemote.DeleteUser(id)
+            val userRoom = userDao.getUser(id)
             if (userRoom != null) {
-                userDao.delete(userRoom)  // Eliminar usuario de la base de datos local
+                userDao.delete(userRoom)
             }
             Resource.Success(Unit)
         } catch (e: HttpException) {
             Resource.Error("Error de conexión: ${e.message()}")
         } catch (e: Exception) {
             Log.e("UserRepository", "deleteUser: ${e.message}")
-            // Si ocurre un error, intentar eliminar el usuario localmente también
+
             val userRoom = userDao.getUser(id)
             if (userRoom != null) {
                 userDao.delete(userRoom)
             }
-            Resource.Success(Unit)  // Incluso si falla la eliminación remota, eliminamos localmente
+            Resource.Success(Unit)
         }
     }
 }

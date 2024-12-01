@@ -6,18 +6,13 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material3.Button
-import androidx.compose.material3.DatePicker
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -30,15 +25,15 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Popup
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import edu.ucne.taskmaster.R
@@ -46,10 +41,8 @@ import edu.ucne.taskmaster.ui.theme.TaskMasterTheme
 import edu.ucne.taskmaster.util.DateUtil
 import edu.ucne.taskmaster.util.getDisplayName
 import java.text.SimpleDateFormat
-import java.time.Instant
-import java.time.LocalDate
 import java.time.YearMonth
-import java.time.ZoneId
+import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
@@ -68,7 +61,7 @@ fun CalendarScreen(
     toPreviousMonth: (YearMonth) -> Unit = viewModel::toPreviousMonth,
     toNextMonth: (YearMonth) -> Unit = viewModel::toNextMonth,
     onDateClick: () -> Unit = viewModel::onDateClick,
-    onDateSelected: (LocalDate) -> Unit = viewModel::changeSelectedDate
+    onDateSelected: (Date) -> Unit = viewModel::changeSelectedDate
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val datePickerState = rememberDatePickerState()
@@ -90,6 +83,14 @@ fun CalendarScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(padding)
         ) {
+            if (uiState.showModal) {
+                DatePickerDialog(
+                    onDateSelected = { date ->
+                        onDateSelected(date)
+                    },
+                    onDismissRequest = { onDateClick() }
+                )
+            }
             CalendarWidget(
                 days = DateUtil.daysOfWeek,
                 yearMonth = uiState.yearMonth,
@@ -107,55 +108,32 @@ fun CalendarScreen(
                     onDateClick()
                 }
             )
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .fillMaxHeight()
-            ) {
-                if (uiState.showModal) {
-                    Popup(
-                        onDismissRequest = { onDateClick() },
-                        alignment = Alignment.TopStart
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .offset(y = 64.dp)
-                                .shadow(elevation = 4.dp)
-                                .background(MaterialTheme.colorScheme.surface)
-                                .padding(16.dp)
-                        ) {
-                            Column {
-                                Button(
-                                    onClick = {
-                                        var selectedDate =
-                                            datePickerState.selectedDateMillis?.let { selectedDateMillis ->
-                                                Instant.ofEpochMilli(selectedDateMillis)
-                                                    .atZone(ZoneId.systemDefault())
-                                                    .toLocalDate()
-
-                                            }
-
-                                        onDateSelected(
-                                            selectedDate ?: LocalDate.now()
-                                        )
-                                        onDateClick()
-                                    }
-                                ) {
-                                    Text("Aceptar")
-                                }
-                                DatePicker(
-                                    state = datePickerState,
-                                    showModeToggle = false
-                                )
-                            }
-                        }
-                    }
-                }
-
-            }
         }
     }
+}
+
+
+@Composable
+fun DatePickerDialog(
+    onDateSelected: (Date) -> Unit,
+    onDismissRequest: () -> Unit
+) {
+    val context = LocalContext.current
+    val calendar = Calendar.getInstance()
+    val datePickerDialog = remember {
+        android.app.DatePickerDialog(
+            context,
+            { _, year, month, dayOfMonth ->
+                calendar.set(year, month, dayOfMonth)
+                onDateSelected(calendar.time)
+            },
+            calendar.get(Calendar.YEAR),
+            calendar.get(Calendar.MONTH),
+            calendar.get(Calendar.DAY_OF_MONTH)
+        )
+    }
+    datePickerDialog.setOnDismissListener { onDismissRequest() }
+    datePickerDialog.show()
 }
 
 @Composable

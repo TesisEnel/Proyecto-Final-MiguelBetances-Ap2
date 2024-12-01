@@ -1,9 +1,9 @@
 package edu.ucne.taskmaster.util
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.automirrored.outlined.List
 import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.DateRange
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -37,21 +37,18 @@ fun BottomNavigationBar(
             unselectedIcon = Icons.Outlined.DateRange
         ),
         NavigationItem(
-            title = "Add",
-            selectedIcon = Icons.Filled.Add,
-            unselectedIcon = Icons.Outlined.Add
+            title = "List",
+            selectedIcon = Icons.AutoMirrored.Filled.List,
+            unselectedIcon = Icons.AutoMirrored.Outlined.List
         )
     )
     var selectedItem by remember { mutableStateOf(0) }
 
-    // The main layout with the BottomNavigationBar and the content
     androidx.compose.foundation.layout.Column {
-        // Render main content above the navigation bar
         androidx.compose.foundation.layout.Box(modifier = Modifier.weight(1f)) {
             content()
         }
 
-        // Bottom navigation bar
         NavigationBar {
             items.forEachIndexed { index, item ->
                 NavigationBarItem(
@@ -67,6 +64,7 @@ fun BottomNavigationBar(
                         selectedItem = index
                         when (item.title) {
                             "Calendar" -> navController.navigate(Screen.Calendar)
+                            "List" -> navController.navigate(Screen.TaskList)
                         }
                     }
                 )
