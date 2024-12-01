@@ -3,7 +3,9 @@ package edu.ucne.taskmaster.util
 import android.util.Log
 import edu.ucne.taskmaster.remote.dto.toLabelEntity
 import edu.ucne.taskmaster.remote.dto.toTaskEntity
+import edu.ucne.taskmaster.remote.dto.toTaskLabelEntity
 import edu.ucne.taskmaster.repository.LabelRepository
+import edu.ucne.taskmaster.repository.TaskLabelRepository
 import edu.ucne.taskmaster.repository.TaskRepository
 import edu.ucne.taskmaster.repository.UserRepository
 import javax.inject.Inject
@@ -11,7 +13,8 @@ import javax.inject.Inject
 class Download @Inject constructor(
     private val userRepository: UserRepository,
     private val labelRepository: LabelRepository,
-    private val taskRepository: TaskRepository
+    private val taskRepository: TaskRepository,
+    private val taskLabelRepository: TaskLabelRepository
 ) {
     suspend fun downloadlabels() {
         try {
@@ -34,6 +37,17 @@ class Download @Inject constructor(
                 taskRepository.saveTaskRoom(
                     it.toTaskEntity()
                 )
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    suspend fun downloadTaskLabel(id: Int) {
+        try {
+            val taskLabels = taskLabelRepository.getTaskLabelApi(id)
+            taskLabels.forEach {
+                taskLabelRepository.saveTaskLabelRoom(it.toTaskLabelEntity())
             }
         } catch (e: Exception) {
             e.printStackTrace()
