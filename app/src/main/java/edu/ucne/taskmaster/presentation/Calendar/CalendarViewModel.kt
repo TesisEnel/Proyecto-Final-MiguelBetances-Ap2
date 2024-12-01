@@ -6,12 +6,11 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import edu.ucne.taskmaster.util.CalendarDataSource
 import edu.ucne.taskmaster.util.Download
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.time.LocalDate
 import java.time.YearMonth
+import java.util.Date
 import javax.inject.Inject
 
 
@@ -23,13 +22,14 @@ class CalendarViewModel @Inject constructor(
     private val dataSource by lazy { CalendarDataSource() }
 
     private val _uiState = MutableStateFlow(CalendarUiState.Init)
-    val uiState: StateFlow<CalendarUiState> = _uiState.asStateFlow()
+    val uiState = _uiState.asStateFlow()
 
     init {
 
         viewModelScope.launch {
             download.downloadTasks()
             download.downloadlabels()
+            download.downloadTaskLabel(0)
             _uiState.update { currentState ->
                 currentState.copy(
                     dates = dataSource.getDates(currentState.yearMonth)
@@ -39,12 +39,12 @@ class CalendarViewModel @Inject constructor(
     }
 
 
-    fun changeSelectedDate(selectedDate: LocalDate) {
+    fun changeSelectedDate(selectedDate: Date) {
         viewModelScope.launch {
             _uiState.update {
                 it.copy(
                     selectedDate = selectedDate,
-                    yearMonth = YearMonth.of(selectedDate.year, selectedDate.monthValue)
+                    yearMonth = YearMonth.of(selectedDate.year, selectedDate.month)
                 )
             }
         }
@@ -86,7 +86,7 @@ class CalendarViewModel @Inject constructor(
 data class CalendarUiState(
     val yearMonth: YearMonth,
     val dates: List<Date>,
-    val selectedDate: LocalDate? = null,
+    val selectedDate: java.util.Date? = null,
     val showModal: Boolean = false
 ) {
     companion object {
