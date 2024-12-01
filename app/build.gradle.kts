@@ -112,4 +112,9 @@ dependencies {
     implementation(libs.coil.compose)
 
     implementation(libs.material.calendar.view)
+
+    implementation(libs.androidx.paging.runtime)
+    implementation(libs.androidx.room.paging)
+    implementation(libs.androidx.paging.compose)
+
 }
