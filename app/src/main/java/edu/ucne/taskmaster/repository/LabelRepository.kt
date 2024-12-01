@@ -18,13 +18,14 @@ class LabelRepository @Inject constructor(
 ) {
     suspend fun getLabelsApi() = labelRemote.getLabels()
     suspend fun saveLabelRoom(label: LabelEntity) = labelDao.save(label)
+    suspend fun getLabelRoom(id: Int) = labelDao.getLabel(id = id) ?: LabelEntity()
 
     fun getLabels(): Flow<Resource<List<LabelEntity>>> = flow {
         try {
             emit(Resource.Loading())
             val labelsApi = labelRemote.getLabels()
             val labelsRoom = labelsApi.map { it.toLabelEntity() }
-            labelsRoom.forEach { labelDao.save(it) } // Guardar en la base de datos local
+            labelsRoom.forEach { labelDao.save(it) }
 
             emit(Resource.Success(labelsRoom))
         } catch (e: HttpException) {
@@ -53,7 +54,7 @@ class LabelRepository @Inject constructor(
             emit(Resource.Loading())
             val labelsApi = labelRemote.getLabelsFilterByUser(userId)
             val labelsRoom = labelsApi.map { it.toLabelEntity() }
-            labelsRoom.forEach { labelDao.save(it) } // Guardar en la base de datos local
+            labelsRoom.forEach { labelDao.save(it) }
 
             emit(Resource.Success(labelsRoom))
         } catch (e: HttpException) {
@@ -70,7 +71,7 @@ class LabelRepository @Inject constructor(
             emit(Resource.Loading())
             val labelApi = labelRemote.SaveLabel(label)
             val labelRoom = labelApi.toLabelEntity()
-            labelDao.save(labelRoom) // Guardar en la base de datos local
+            labelDao.save(labelRoom)
 
             emit(Resource.Success(labelRoom))
         } catch (e: HttpException) {
@@ -86,7 +87,7 @@ class LabelRepository @Inject constructor(
             labelRemote.DeleteLabel(id)
             val labelRoom = labelDao.getLabel(id)
             if (labelRoom != null) {
-                labelDao.delete(labelRoom) // Eliminar de la base de datos local
+                labelDao.delete(labelRoom)
             }
 
             Resource.Success(Unit)
