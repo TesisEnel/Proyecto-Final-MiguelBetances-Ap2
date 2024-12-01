@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "956299448331",
+    "project_id": "taskmaster-60811",
+    "storage_bucket": "taskmaster-60811.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:956299448331:android:4e539123556837f40eb70e",
+        "android_client_info": {
+          "package_name": "edu.ucne.taskmaster"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD9scVYGptaVB2Gr57TK3iFoSatKv0SbP0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
