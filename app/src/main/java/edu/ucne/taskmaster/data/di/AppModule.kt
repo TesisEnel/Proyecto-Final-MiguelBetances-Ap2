@@ -11,6 +11,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import edu.ucne.taskmaster.data.local.database.TaskMask
 import edu.ucne.taskmaster.remote.api.LabelApi
+import edu.ucne.taskmaster.remote.api.TaskLabelApi
 import edu.ucne.taskmaster.remote.api.TasksApi
 import edu.ucne.taskmaster.remote.api.UserApi
 import retrofit2.Retrofit
@@ -39,6 +40,7 @@ object AppModule {
     fun providesMoshi(): Moshi =
         Moshi.Builder()
             .add(KotlinJsonAdapterFactory())
+            .add(DateAdater())
             .build()
 
     @Singleton
@@ -48,7 +50,7 @@ object AppModule {
 
         return Retrofit.Builder()
             .baseUrl(BASE_URL)
-            .addConverterFactory(MoshiConverterFactory.create(moshi)) // Usa Moshi
+            .addConverterFactory(MoshiConverterFactory.create(moshi))
             .build()
     }
 
@@ -84,6 +86,16 @@ object AppModule {
 
     @Singleton
     @Provides
+    fun TaskLabelApi(moshi: Moshi): TaskLabelApi {
+        return Retrofit.Builder()
+            .baseUrl(BASE_URL)
+            .addConverterFactory(MoshiConverterFactory.create(moshi))
+            .build()
+            .create(TaskLabelApi::class.java)
+    }
+
+    @Singleton
+    @Provides
     fun provideTaskDao(database: TaskMask) = database.taskDao()
 
     @Singleton
@@ -93,6 +105,10 @@ object AppModule {
     @Singleton
     @Provides
     fun provideUserDao(database: TaskMask) = database.userDao()
+
+    @Singleton
+    @Provides
+    fun provideTaskLabelDao(database: TaskMask) = database.taskLabelDao()
 
 
 }
