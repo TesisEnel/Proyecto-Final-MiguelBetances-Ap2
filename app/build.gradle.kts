@@ -6,6 +6,7 @@ plugins {
     id("com.google.dagger.hilt.android")
     id("org.jetbrains.kotlin.plugin.compose")
     alias(libs.plugins.kotlinx.serialization)
+    alias(libs.plugins.google.gms.google.services)
 }
 
 android {
@@ -72,6 +73,8 @@ dependencies {
     // Room
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.foundation.layout.android)
+    implementation(libs.firebase.auth)
+    implementation(libs.play.services.auth)
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.room.ktx)
     annotationProcessor(libs.androidx.room.compiler)
@@ -117,4 +120,13 @@ dependencies {
     implementation(libs.androidx.room.paging)
     implementation(libs.androidx.paging.compose)
 
+    // Import the BoM for the Firebase platform
+    implementation(platform("com.google.firebase:firebase-bom:32.8.0"))
+
+    // Add the dependency for the Firebase Authentication library
+    // When using the BoM, you don't specify versions in Firebase library dependencies
+    implementation("com.google.firebase:firebase-auth")
+
+    // Also add the dependency for the Google Play services library and specify its version
+    implementation("com.google.android.gms:play-services-auth:21.0.0")
 }
