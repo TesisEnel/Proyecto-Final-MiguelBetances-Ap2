@@ -1,7 +1,6 @@
 package edu.ucne.taskmaster.repository
 
 import android.util.Log
-import androidx.paging.PagingSource
 import edu.ucne.taskmaster.data.local.dao.TaskDao
 import edu.ucne.taskmaster.data.local.entities.TaskEntity
 import edu.ucne.taskmaster.remote.RemoteDataSource
@@ -17,10 +16,6 @@ class TaskRepository @Inject constructor(
     private val taskDao: TaskDao,
     private val taskRemote: RemoteDataSource
 ) {
-
-    fun getTasksPaging(limit: Int, offset: Int): PagingSource<Int, TaskEntity> =
-        taskDao.getTasksPaging(limit, offset)
-
     suspend fun getTasksApi() = taskRemote.getAllTask()
 
     suspend fun saveTaskRoom(taskEntity: TaskEntity) {
@@ -29,6 +24,15 @@ class TaskRepository @Inject constructor(
 
     suspend fun getTaskRoom() = taskDao.getAllTask()
 
+    suspend fun getTaskRoomById(id: Int) = taskDao.getTask(id)
+
+    suspend fun deleteTaskRoom(id: Int) {
+        taskDao.deleteTask(id)
+    }
+
+    suspend fun insertAndGetId(task: TaskEntity): Long {
+        return taskDao.insertAndGetId(task)
+    }
 
     fun getTasks(): Flow<Resource<List<TaskEntity>>> = flow {
         try {

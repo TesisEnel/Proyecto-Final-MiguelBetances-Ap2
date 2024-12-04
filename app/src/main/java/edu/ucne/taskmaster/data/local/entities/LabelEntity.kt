@@ -6,7 +6,7 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "Label")
 data class LabelEntity(
     @PrimaryKey
-    val id: Int = 0,
+    val id: Int? = null,
     val description: String = "",
     val hexColor: String = "",
     val synchronized: Int = 0

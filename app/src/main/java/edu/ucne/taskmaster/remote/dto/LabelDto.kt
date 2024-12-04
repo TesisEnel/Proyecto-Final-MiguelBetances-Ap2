@@ -5,7 +5,7 @@ import edu.ucne.taskmaster.data.local.entities.LabelEntity
 data class LabelDto(
     val description: String?,
     val hexColor: String = "#FFFFFF",
-    val id: Int,
+    val id: Int? = null,
 )
 
 

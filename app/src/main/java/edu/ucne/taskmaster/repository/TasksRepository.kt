@@ -10,10 +10,16 @@ class TasksRepository @Inject constructor(
 ) {
     suspend fun getTasksWithRealLabels(): List<Tasks> {
         return taskRepository.getTaskRoom().map { t ->
-            val labelIds = taskLabelRepository.getTaskLabelRoom(t.taskId).map { it.labelId }
+            val labelIds = taskLabelRepository.getTaskLabelRoom(t.taskId!!).map { it.labelId }
             val labels = labelIds.map { id -> labelRepository.getLabelRoom(id) }
             Tasks(task = t, labels = labels)
         }
     }
 
+    suspend fun getTaskWithRealLabelsById(taskId: Int): Tasks {
+        val task = taskRepository.getTaskRoomById(taskId)
+        val labelIds = taskLabelRepository.getTaskLabelRoom(taskId).map { it.labelId }
+        val labels = labelIds.map { id -> labelRepository.getLabelRoom(id) }
+        return Tasks(task = task!!, labels = labels)
+    }
 }
