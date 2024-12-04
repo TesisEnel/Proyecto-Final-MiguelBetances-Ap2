@@ -7,10 +7,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -18,6 +16,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -50,8 +49,7 @@ import java.util.Date
 fun TaskListScreen(
     viewModel: TaskListViewModel = hiltViewModel(),
     createTask: () -> Unit,
-    gotoTask: (Int) -> Unit,
-    gotoEditTask: (Int) -> Unit
+    onTaskClick: (Int) -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -65,7 +63,7 @@ fun TaskListScreen(
                     titleContentColor = Color.White
                 ),
                 actions = {
-                    IconButton(onClick = { /* hola */ }) {
+                    IconButton(onClick = { /* Add search logic */ }) {
                         Icon(
                             Icons.Filled.Search,
                             contentDescription = "Search",
@@ -84,14 +82,22 @@ fun TaskListScreen(
             }
         }
     ) { innerPadding ->
-        TaskListBody(innerPadding, uiState)
+        TaskListBody(
+            innerPadding = innerPadding,
+            uiState = uiState,
+            onTaskClick = { onTaskClick(it) },
+            onOrderChange = { order -> viewModel.onEvent(TaskListUiEvent.OnOrderChange(order)) }
+        )
     }
 }
+
 
 @Composable
 fun TaskListBody(
     innerPadding: PaddingValues,
-    uiState: TaskListUIState
+    uiState: TaskListUIState,
+    onTaskClick: (Int) -> Unit,
+    onOrderChange: (String) -> Unit
 ) {
     Box(
         modifier = Modifier
@@ -111,17 +117,32 @@ fun TaskListBody(
                 modifier = Modifier.align(Alignment.Center),
                 color = Color.White
             )
-        } else if (uiState.error?.isNotEmpty() == true || uiState.tasks.isEmpty()) {
-            NoDataView()
+        } else if (uiState.error?.isNotEmpty() == true) {
+            Text(
+                text = uiState.error,
+                color = Color.White,
+                style = MaterialTheme.typography.titleMedium
+            )
         } else {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                contentPadding = PaddingValues(16.dp)
-            ) {
-                items(uiState.tasks.size) { index ->
-                    val tasks = uiState.tasks[index]
-                    TaskItem(tasks.task, tasks.labels)
+            Column {
+                // Botones de ordenación
+                OrderButtons(
+                    orderBy = uiState.orderBy,
+                    currentOrder = uiState.currentOrder,
+                    onOrderChange = onOrderChange
+                )
+
+                // Lista de tareas
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    contentPadding = PaddingValues(16.dp)
+
+                ) {
+                    items(uiState.tasks.size) { index ->
+                        val tasks = uiState.tasks[index]
+                        TaskItem(tasks.task, tasks.labels, onTaskClick)
+                    }
                 }
             }
         }
@@ -129,28 +150,7 @@ fun TaskListBody(
 }
 
 @Composable
-fun NoDataView() {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(
-                text = "No data available",
-                color = Color.White,
-                style = MaterialTheme.typography.titleMedium
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            Button(onClick = { /* Retry action */ }) {
-                Text("Retry")
-            }
-        }
-    }
-}
-
-
-@Composable
-fun TaskItem(task: TaskEntity, labels: List<LabelEntity>) {
+fun TaskItem(task: TaskEntity, labels: List<LabelEntity>, onTaskClick: (Int) -> Unit) {
     val dueDateColor = task.dueDate.let {
         calculateDueDateColor(it)
     }
@@ -159,7 +159,7 @@ fun TaskItem(task: TaskEntity, labels: List<LabelEntity>) {
         modifier = Modifier
             .clip(RoundedCornerShape(12.dp))
             .background(Color(44, 62, 80))
-            .clickable { /* Click action */ }
+            .clickable { onTaskClick(task.taskId!!) }
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
@@ -235,11 +235,36 @@ fun calculateDueDateColor(dueDate: Date): Color {
     }
 }
 
+@Composable
+fun OrderButtons(
+    orderBy: List<String>,
+    currentOrder: Int = 0,
+    onOrderChange: (String) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp),
+        horizontalArrangement = Arrangement.SpaceEvenly
+    ) {
+        orderBy.forEachIndexed { index, order ->
+            Button(
+                onClick = { onOrderChange(order) },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (currentOrder == index) Color.Gray else Color.DarkGray
+                )
+            ) {
+                Text(order)
+            }
+        }
+    }
+}
+
 fun formatDueDateAndTime(dueDate: Date): String {
     val localDateTime = dueDate.toInstant().atZone(ZoneId.systemDefault())
-        .toLocalDateTime() // Convierte Date a LocalDateTime
+        .toLocalDateTime()
     val formatter =
-        DateTimeFormatter.ofPattern("MMMM dd, yyyy hh:mm a") // Patrón con hora y minutos
+        DateTimeFormatter.ofPattern("MMMM dd, yyyy hh:mm a")
     return localDateTime.format(formatter)
 }
 

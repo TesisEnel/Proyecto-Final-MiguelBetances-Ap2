@@ -13,9 +13,13 @@ sealed class Screen {
     data object TaskList : Screen()
 
     @Serializable
-    object Label : Screen()
+    object LabelList : Screen()
+
+    @Serializable
+    data class Label(val id: Int) : Screen()
 
     @Serializable
     data object LoginScreen : Screen()
+
 
 }

@@ -18,6 +18,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
 import edu.ucne.taskmaster.presentation.Calendar.CalendarScreen
+import edu.ucne.taskmaster.presentation.Label.LabelListScreen
 import edu.ucne.taskmaster.presentation.Label.LabelScreen
 import edu.ucne.taskmaster.presentation.TaskList.TaskListScreen
 import edu.ucne.taskmaster.presentation.TaskList.TaskScreen
@@ -47,10 +48,7 @@ fun NavHostApp(
                 createTask = {
                     navHostController.navigate(Screen.Task(0))
                 },
-                gotoTask = {
-                    navHostController.navigate(Screen.Task(it))
-                },
-                gotoEditTask = {
+                onTaskClick = {
                     navHostController.navigate(Screen.Task(it))
                 }
             )
@@ -66,8 +64,22 @@ fun NavHostApp(
             )
         }
 
+        composable<Screen.LabelList> {
+            LabelListScreen(
+                onAddLabel = {
+                    navHostController.navigate(Screen.Label(0))
+                }
+            )
+        }
+
         composable<Screen.Label> {
-            LabelScreen()
+            val args = it.toRoute<Screen.Label>()
+            LabelScreen(
+                labelId = args.id,
+                goBack = {
+                    navHostController.popBackStack()
+                }
+            )
         }
 
         composable<Screen.LoginScreen> {
@@ -84,9 +96,9 @@ fun NavHostApp(
                                     intent = result.data ?: return@launch
                                 )
                             viewModel.onSignInResult(signInResult)
-//                            navHostController.navigate(Screen.HomeScreen){
-//                                popUpTo(Screen.UsuarioLoginScreen) { inclusive = true }
-//                            }
+                            navHostController.navigate(Screen.Calendar) {
+                                popUpTo(Screen.LoginScreen) { inclusive = true }
+                            }
                         }
                     }
                 }
@@ -116,5 +128,7 @@ fun NavHostApp(
                 }
             )
         }
+
+
     }
 }

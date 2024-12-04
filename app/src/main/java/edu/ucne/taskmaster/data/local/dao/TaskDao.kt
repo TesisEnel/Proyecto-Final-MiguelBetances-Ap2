@@ -2,7 +2,6 @@ package edu.ucne.taskmaster.data.local.dao
 
 import androidx.paging.PagingSource
 import androidx.room.Dao
-import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
@@ -16,6 +15,10 @@ interface TaskDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun save(task: TaskEntity) // todo save para insertar o reemplazar
+
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAndGetId(task: TaskEntity): Long
 
     @Query(
         """
@@ -33,16 +36,13 @@ interface TaskDao {
     )
     suspend fun getAllTask(): List<TaskEntity>
 
-    @Delete
-    suspend fun DeleteTask(task: TaskEntity)
-
     @Query(
         """
         DELETE FROM Tasks
         WHERE TaskId = :id
         """
     )
-    suspend fun delete(id: Int)
+    suspend fun deleteTask(id: Int)
 
     @Query("DELETE FROM Tasks WHERE TaskId = :id")
     suspend fun deleteById(id: Int)

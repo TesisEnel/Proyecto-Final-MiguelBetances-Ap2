@@ -19,7 +19,7 @@ import edu.ucne.taskmaster.data.local.entities.UserEntity
         LabelEntity::class,
         TaskLabelEntity::class
     ],
-    version = 3,
+    version = 6,
     exportSchema = false
 )
 

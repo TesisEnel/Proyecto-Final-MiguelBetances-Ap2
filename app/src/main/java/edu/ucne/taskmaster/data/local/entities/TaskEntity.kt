@@ -7,7 +7,7 @@ import java.util.Date
 @Entity(tableName = "Tasks")
 data class TaskEntity(
     @PrimaryKey
-    val taskId: Int = 0,
+    val taskId: Int? = null,
     val createdDate: Date,
     val description: String?,
     val dueDate: Date,
