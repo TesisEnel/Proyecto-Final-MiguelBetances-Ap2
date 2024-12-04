@@ -6,8 +6,9 @@ data class LabelUiState(
     val isLoading: Boolean = false,
     val id: Int = 0,
     val description: String = "",
-    val hexColor: String = "",
+    val hexColor: String = "000000",
     val labels: List<LabelEntity> = emptyList(),
-    val error: String? = null
+    val error: String? = null,
+    val showModal: Boolean = false
 )
 

@@ -1,104 +1,180 @@
 package edu.ucne.taskmaster.presentation.Label
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material.icons.filled.Done
+import androidx.compose.material3.Button
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import edu.ucne.taskmaster.data.local.entities.LabelEntity
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import edu.ucne.taskmaster.util.HueBar
+import edu.ucne.taskmaster.util.hexToColor
+import edu.ucne.taskmaster.util.toHexString
+
+// Package and imports remain the same
 
 @Composable
-@OptIn(ExperimentalMaterial3Api::class)
 fun LabelScreen(
-    viewModel: LabelViewModel = hiltViewModel()
+    viewModel: LabelViewModel = hiltViewModel(),
+    labelId: Int,
+    goBack: () -> Unit,
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Labels") },
-                actions = {
-                    IconButton(onClick = { /* Agregar Label*/ }) {
-                        Icon(Icons.Default.Add, contentDescription = "Add Label")
-                    }
-                }
-            )
-        },
-        content = {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(it)
-            ) {
-                if (uiState.isLoading) {
-                    CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
-                } else {
-                    if (uiState.error != null) {
-                        Text(text = "Error: ${uiState.error}", color = Color.Red)
-                    }
-
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(16.dp)
-                    ) {
-                        items(uiState.labels) { label ->
-                            LabelItem(label = label, onDelete = { viewModel.deleteLabel(label.id) })
-                        }
-                    }
-                }
-            }
+    LaunchedEffect(key1 = labelId) {
+        if (labelId != 0) {
+            viewModel.onEvent(LabelUiEvent.GetLabel(labelId))
         }
+    }
+
+    LabelScreen(
+        labelId = labelId,
+        uiState = uiState,
+        onEvent = viewModel::onEvent,
+        goBack = goBack
     )
 }
 
 @Composable
-fun LabelItem(
-    label: LabelEntity,
-    onDelete: () -> Unit
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+private fun LabelScreen(
+    labelId: Int,
+    uiState: LabelUiState,
+    onEvent: (LabelUiEvent) -> Unit,
+    goBack: () -> Unit,
 ) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        shape = RoundedCornerShape(8.dp)
-    ) {
-        Row(
+    Scaffold(
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = { Text(if (labelId == 0) "Crear Label" else "Modificar Label") },
+                navigationIcon = {
+                    IconButton(onClick = goBack) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = null
+                        )
+                    }
+                }
+            )
+        },
+        floatingActionButton = {
+            Column {
+                Button(
+                    onClick = {
+                        onEvent(LabelUiEvent.SaveLabel)
+                        goBack()
+                    },
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Icon(
+                        imageVector = if (labelId == 0) Icons.Default.Add else Icons.Default.Done,
+                        contentDescription = null
+                    )
+                    Text(text = if (labelId == 0) "Crear" else "Modificar")
+                }
+                if (labelId != 0) {
+                    Button(
+                        onClick = {
+                            onEvent(LabelUiEvent.DeleteLabel(labelId))
+                            goBack()
+                        },
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Done,
+                            contentDescription = null
+                        )
+                        Text(text = "Eliminar")
+                    }
+                }
+            }
+        }
+    ) { innerPadding ->
+        LazyColumn(
             modifier = Modifier
-                .fillMaxWidth()
+                .padding(innerPadding)
                 .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(text = label.description, style = MaterialTheme.typography.bodyLarge)
+            item {
+                OutlinedTextField(
+                    label = { Text("Descripción") },
+                    value = uiState.description,
+                    onValueChange = { onEvent(LabelUiEvent.DescriptionChange(it)) },
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
-            IconButton(onClick = onDelete) {
-                Icon(Icons.Default.Delete, contentDescription = "Delete")
+            item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clearAndSetSemantics { }
+                        .clickable { /* Expand color picker if necessary */ },
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "Color de la etiqueta",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Box(
+                        modifier = Modifier
+                            .size(24.dp)
+                            .border(1.dp, Color.Black, CircleShape)
+                            .background(uiState.hexColor.hexToColor(), CircleShape)
+                    )
+                }
             }
+            item {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Seleccionar color:",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    HueBar { hue ->
+                        val selectedColor =
+                            Color(android.graphics.Color.HSVToColor(floatArrayOf(hue, 1f, 1f)))
+                        onEvent(LabelUiEvent.ColorChange(selectedColor.toHexString()))
+                    }
+                }
+            }
+
         }
     }
 }
+
+

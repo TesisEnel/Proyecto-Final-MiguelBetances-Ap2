@@ -18,7 +18,10 @@ class LabelRepository @Inject constructor(
 ) {
     suspend fun getLabelsApi() = labelRemote.getLabels()
     suspend fun saveLabelRoom(label: LabelEntity) = labelDao.save(label)
-    suspend fun getLabelRoom(id: Int) = labelDao.getLabel(id = id) ?: LabelEntity()
+    suspend fun getLabelRoom(id: Int) = labelDao.getLabel(id = id) ?: LabelEntity(id = 0)
+    suspend fun getLabelsRoom() = labelDao.getAll()
+    suspend fun getLabelDescription() = labelDao.getLabelDescription()
+
 
     fun getLabels(): Flow<Resource<List<LabelEntity>>> = flow {
         try {
