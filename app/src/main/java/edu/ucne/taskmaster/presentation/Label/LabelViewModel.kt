@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import edu.ucne.taskmaster.remote.dto.LabelDto
+import edu.ucne.taskmaster.remote.dto.toLabelEntity
 import edu.ucne.taskmaster.repository.LabelRepository
 import edu.ucne.taskmaster.util.Resource
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,10 +26,10 @@ class LabelViewModel @Inject constructor(
         onEvent(LabelUiEvent.GetLabels)
     }
 
-    private fun onEvent(event: LabelUiEvent) {
+    fun onEvent(event: LabelUiEvent) {
         when (event) {
             is LabelUiEvent.SaveLabel -> {
-                saveLabel(event.label)
+                savelavelRoom()
             }
 
             is LabelUiEvent.DeleteLabel -> {
@@ -40,7 +41,9 @@ class LabelViewModel @Inject constructor(
             }
 
             is LabelUiEvent.ColorChange -> {
-                _uiState.update { it.copy(hexColor = event.color) }
+                _uiState.update {
+                    it.copy(hexColor = event.color.removePrefix("#"))
+                }
             }
 
             is LabelUiEvent.GetLabel -> {
@@ -48,8 +51,21 @@ class LabelViewModel @Inject constructor(
             }
 
             is LabelUiEvent.GetLabels -> {
-                loadLabels()
+                loadLabelsFromRoom()
             }
+        }
+    }
+
+    private fun loadLabelsFromRoom() {
+        viewModelScope.launch {
+            val labels = labelRepository.getLabelsRoom()
+            _uiState.update {
+                it.copy(
+                    labels = labels
+                )
+            }
+            onEvent(LabelUiEvent.GetLabels)
+
         }
     }
 
@@ -83,9 +99,26 @@ class LabelViewModel @Inject constructor(
         }
     }
 
-    private fun saveLabel(label: LabelDto) {
+    private fun savelavelRoom() {
         viewModelScope.launch {
-            labelRepository.saveLabel(label).collectLatest { result ->
+            val labelDto = LabelDto(
+                description = _uiState.value.description,
+                hexColor = _uiState.value.hexColor,
+                id = if (_uiState.value.id == 0) null else _uiState.value.id
+            )
+            labelRepository.saveLabelRoom(labelDto.toLabelEntity())
+        }
+    }
+
+
+    private fun saveLabel() {
+        viewModelScope.launch {
+            val labelDto = LabelDto(
+                description = _uiState.value.description,
+                hexColor = _uiState.value.hexColor,
+                id = if (_uiState.value.id == 0) null else _uiState.value.id
+            )
+            labelRepository.saveLabel(labelDto).collectLatest { result ->
                 when (result) {
                     is Resource.Loading -> {
                         _uiState.update { it.copy(isLoading = true) }
