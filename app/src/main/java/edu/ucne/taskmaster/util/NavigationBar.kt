@@ -5,6 +5,7 @@ import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.automirrored.outlined.List
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.outlined.DateRange
+import androidx.compose.material.icons.sharp.MoreVert
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -37,9 +38,14 @@ fun BottomNavigationBar(
             unselectedIcon = Icons.Outlined.DateRange
         ),
         NavigationItem(
-            title = "List",
+            title = "Tasks",
             selectedIcon = Icons.AutoMirrored.Filled.List,
             unselectedIcon = Icons.AutoMirrored.Outlined.List
+        ),
+        NavigationItem(
+            title = "Labels",
+            selectedIcon = Icons.Sharp.MoreVert,
+            unselectedIcon = Icons.Sharp.MoreVert
         )
     )
     var selectedItem by remember { mutableStateOf(0) }
@@ -64,7 +70,8 @@ fun BottomNavigationBar(
                         selectedItem = index
                         when (item.title) {
                             "Calendar" -> navController.navigate(Screen.Calendar)
-                            "List" -> navController.navigate(Screen.TaskList)
+                            "Tasks" -> navController.navigate(Screen.TaskList)
+                            "Labels" -> navController.navigate(Screen.LabelList)
                         }
                     }
                 )
