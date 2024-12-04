@@ -12,5 +12,6 @@ class TaskLabelRepository @Inject constructor(
     suspend fun getTaskLabelApi(id: Int) = taskLabelApi.getLabelTasksUser(id)
     suspend fun saveTaskLabelRoom(taskLabel: TaskLabelEntity) = tasklabelDao.save(taskLabel)
     suspend fun getTaskLabelRoom(taskId: Int) = tasklabelDao.getTaskLabels(taskId)
+    suspend fun deleteTaskLabelRoom(taskId: Int) = tasklabelDao.deleteTaskLabels(taskId)
 
 }
