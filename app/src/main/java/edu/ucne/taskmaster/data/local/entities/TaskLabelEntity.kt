@@ -6,7 +6,7 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "LabelTasks")
 data class TaskLabelEntity(
     @PrimaryKey
-    val id: Int = 0,
+    val id: Int? = null,
     val taskId: Int,
     val labelId: Int
 )
