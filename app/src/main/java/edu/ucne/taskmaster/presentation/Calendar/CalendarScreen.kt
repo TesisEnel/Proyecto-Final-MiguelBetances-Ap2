@@ -252,58 +252,49 @@ fun ContentItem(
 ) {
     Box(
         modifier = modifier
+            .padding(4.dp)
             .background(
-                color = if (date.isSelected) {
-                    MaterialTheme.colorScheme.secondaryContainer
-                } else {
-                    Color.Transparent
-                }
+                color = if (date.isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
+                shape = CircleShape
             )
-            .clickable {
-                onClickListener(date)
-            }
+            .clickable { onClickListener(date) }
+            .size(48.dp) // Tamaño uniforme
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(8.dp)
+            modifier = Modifier.padding(4.dp)
         ) {
+            // Mostrar día del mes
             Text(
                 text = date.dayOfMonth,
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.bodyMedium,
+                color = if (date.isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onBackground
             )
 
-            // Mostrar el número de tareas para este día
+            // Mostrar texto con número de tareas, en color de la prioridad más alta
             if (date.tasks.isNotEmpty()) {
-                Text(
-                    text = "${date.tasks.size} tasks",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.padding(top = 4.dp)
-                )
-            }
+                val highestPriorityColor =
+                    getPriorityColor(date.tasks.minByOrNull { it.priority }?.priority ?: 0)
 
-            // Mostrar las bolitas de prioridad
-            if (date.tasks.isNotEmpty()) {
-                val highestPriority = date.tasks.maxByOrNull { it.priority }?.priority
-                Box(
-                    modifier = Modifier
-                        .padding(top = 4.dp)
-                        .size(10.dp)
-                        .background(
-                            color = highestPriority?.let { getPriorityColor(it) } ?: Color.Gray,
-                            shape = CircleShape
-                        )
+                Text(
+                    text = "${date.tasks.size} tasks", // Número de tareas
+                    style = MaterialTheme.typography.labelSmall,
+                    color = highestPriorityColor // Aplicar color basado en prioridad
                 )
             }
         }
     }
 }
 
+
 fun getPriorityColor(priority: Int): Color {
     return when (priority) {
-        1 -> Color.Red // Alta prioridad
-        2 -> Color.Yellow // Media prioridad
-        3 -> Color.Green // Baja prioridad
-        else -> Color.Gray // Prioridad desconocida
+        0 -> Color.Red         // Alta prioridad
+        1 -> Color.Magenta     // Prioridad media-alta
+        2 -> Color(186, 142, 35) // Media
+        3 -> Color.Blue        // Baja-media
+        4 -> Color.Green       // Baja
+        else -> Color.Gray     // Sin prioridad asignada
     }
 }
+
