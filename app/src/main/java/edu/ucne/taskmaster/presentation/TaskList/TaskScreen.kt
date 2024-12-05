@@ -1,19 +1,14 @@
 package edu.ucne.taskmaster.presentation.TaskList
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
@@ -38,13 +33,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import edu.ucne.taskmaster.presentation.Calendar.DatePickerDialog
-import edu.ucne.taskmaster.util.hexToColor
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -105,8 +98,13 @@ private fun TaskBodyScreen(
             Column {
                 Button(
                     onClick = {
-                        onEvent(TaskListUiEvent.SaveTask)
-                        goBackToTaskList()
+                        onEvent(TaskListUiEvent.Validate)
+
+                        if (uiState.title != "" && uiState.description != ""
+                        ) {
+                            onEvent(TaskListUiEvent.SaveTask)
+                            goBackToTaskList()
+                        }
                     },
                     modifier = Modifier.padding(16.dp)
                 ) {
@@ -115,7 +113,6 @@ private fun TaskBodyScreen(
                         contentDescription = null
                     )
                     Text(text = if (taskId == 0) "Crear" else "Modificar")
-
                 }
                 if (taskId != 0) {
                     Button(
@@ -133,7 +130,6 @@ private fun TaskBodyScreen(
                     }
                 }
             }
-
         }
     ) { innerPadding ->
         if (uiState.showModal) {
@@ -150,41 +146,59 @@ private fun TaskBodyScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
+            // Title Field
             item {
                 OutlinedTextField(
                     label = { Text("Título") },
                     value = uiState.title,
                     onValueChange = { onEvent(TaskListUiEvent.TitleChange(it)) },
+                    isError = uiState.titleError != null,
                     modifier = Modifier.fillMaxWidth()
                 )
+                if (uiState.titleError != null) {
+                    Text(
+                        uiState.titleError,
+                        color = Color.Red,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
             }
+
+            // Description Field
             item {
                 OutlinedTextField(
                     label = { Text("Descripción") },
                     value = uiState.description,
                     onValueChange = { onEvent(TaskListUiEvent.DescriptionChange(it)) },
+                    isError = uiState.descriptionError != null,
                     modifier = Modifier.fillMaxWidth()
                 )
+                if (uiState.descriptionError != null) {
+                    Text(
+                        uiState.descriptionError,
+                        color = Color.Red,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
             }
+
+            // Due Date
             item {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clearAndSetSemantics { } // Limpia las semánticas para evitar conflictos
-                        .clickable { onDateClick() }, // Habilita clic en toda la fila
+                        .clickable { onDateClick() },
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text(
-                        text = "Fecha de Vencimiento:",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
+                    Text("Fecha de Vencimiento:", style = MaterialTheme.typography.bodyMedium)
                     TextButton(onClick = onDateClick) {
                         Text(dateFormat.format(uiState.dueDate))
                     }
                 }
             }
 
+            // Priority Selection
             item {
                 Text("Prioridad", style = MaterialTheme.typography.titleMedium)
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -206,47 +220,31 @@ private fun TaskBodyScreen(
                         )
                     }
                 }
+            }
+
+            // Labels
+            item {
                 Column {
-                    // Etiquetas seleccionadas
+                    // Selected Labels
                     Text("Etiquetas seleccionadas", style = MaterialTheme.typography.titleMedium)
                     FlowRow(
-                        horizontalArrangement = Arrangement.spacedBy(16.dp), // Aumentamos el espacio entre los botones
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
                         modifier = Modifier.padding(8.dp)
                     ) {
                         uiState.labelsSelected.forEach { label ->
                             FilterChip(
                                 selected = true,
-                                onClick = { onEvent(TaskListUiEvent.LabelToggle(label)) }, // Deseleccionar
-                                label = {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        // Círculo con borde negro junto al texto
-                                        Box(
-                                            modifier = Modifier
-                                                .size(12.dp) // Ajusta el tamaño del círculo
-                                                .border(
-                                                    1.dp,
-                                                    Color.Black,
-                                                    CircleShape
-                                                ) // Borde negro
-                                                .background(
-                                                    label.hexColor.hexToColor(),
-                                                    shape = CircleShape
-                                                ) // Color de fondo
-                                                .padding(end = 12.dp) // Espaciado mayor entre el círculo y el texto
-                                        )
-                                        // Texto de la etiqueta
-                                        Text(label.description)
-                                    }
-                                },
+                                onClick = { onEvent(TaskListUiEvent.LabelToggle(label)) },
+                                label = { Text(label.description) },
                                 colors = FilterChipDefaults.filterChipColors(
-                                    containerColor = MaterialTheme.colorScheme.primary, // Color de fondo cuando no está seleccionado
+                                    containerColor = MaterialTheme.colorScheme.primary,
                                     labelColor = MaterialTheme.colorScheme.onSurface
                                 )
                             )
                         }
                     }
 
-                    // Etiquetas no seleccionadas
+                    // Unselected Labels
                     Text("Etiquetas no seleccionadas", style = MaterialTheme.typography.titleMedium)
                     FlowRow(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -255,7 +253,7 @@ private fun TaskBodyScreen(
                         uiState.labels.forEach { label ->
                             FilterChip(
                                 selected = false,
-                                onClick = { onEvent(TaskListUiEvent.LabelToggle(label)) }, // Seleccionar
+                                onClick = { onEvent(TaskListUiEvent.LabelToggle(label)) },
                                 label = { Text(label.description) },
                                 colors = FilterChipDefaults.filterChipColors(
                                     selectedContainerColor = MaterialTheme.colorScheme.secondary,

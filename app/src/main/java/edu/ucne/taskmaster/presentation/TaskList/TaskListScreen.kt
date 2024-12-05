@@ -1,6 +1,7 @@
 package edu.ucne.taskmaster.presentation.TaskList
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -10,7 +11,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -27,18 +30,24 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import edu.ucne.taskmaster.data.local.entities.LabelEntity
 import edu.ucne.taskmaster.data.local.entities.TaskEntity
+import edu.ucne.taskmaster.util.hexToColor
+import kotlinx.coroutines.launch
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Date
@@ -50,24 +59,27 @@ fun TaskListScreen(
     viewModel: TaskListViewModel = hiltViewModel(),
     createTask: () -> Unit,
     onTaskClick: (Int) -> Unit,
+    onEvent: (TaskListUiEvent) -> Unit = viewModel::onEvent
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val coroutineScope = rememberCoroutineScope()
+    var isBottomSheetVisible by remember { mutableStateOf(false) }
 
     Scaffold(
-        modifier = Modifier.fillMaxSize(),
         topBar = {
             TopAppBar(
-                title = { Text("Task List", color = Color.White) },
+                title = { Text("Task List") },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(34, 40, 49),
-                    titleContentColor = Color.White
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
                 ),
                 actions = {
-                    IconButton(onClick = { /* Add search logic */ }) {
+                    IconButton(onClick = { isBottomSheetVisible = !isBottomSheetVisible }) {
                         Icon(
-                            Icons.Filled.Search,
+                            imageVector = Icons.Default.Search,
                             contentDescription = "Search",
-                            tint = Color.White
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                     }
                 }
@@ -76,25 +88,46 @@ fun TaskListScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = createTask,
-                containerColor = Color(0xFF007ACC)
+                containerColor = MaterialTheme.colorScheme.secondaryContainer
             ) {
-                Icon(Icons.Filled.Add, contentDescription = "Add", tint = Color.White)
+                Icon(Icons.Default.Add, contentDescription = "Agregar tarea")
             }
         }
-    ) { innerPadding ->
-        TaskListBody(
-            innerPadding = innerPadding,
-            uiState = uiState,
-            onTaskClick = { onTaskClick(it) },
-            onOrderChange = { order -> viewModel.onEvent(TaskListUiEvent.OnOrderChange(order)) }
-        )
+    ) { padding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+        ) {
+            TaskListBody(
+                uiState = uiState,
+                onTaskClick = onTaskClick,
+                onOrderChange = { order -> onEvent(TaskListUiEvent.OnOrderChange(order)) }
+            )
+
+            if (isBottomSheetVisible) {
+                TaskFilterModal(
+                    sheetState = sheetState,
+                    unShowBottomSheet = {
+                        coroutineScope.launch {
+                            isBottomSheetVisible = false
+                            sheetState.hide()
+                        }
+                    },
+                    uiState = uiState,
+                    onTextChange = { viewModel.onEvent(TaskListUiEvent.SearchQueryChange(it)) },
+                    onToggleLabel = { viewModel.onEvent(TaskListUiEvent.FilterLabelToggle(it)) },
+                    onApplyFilters = { viewModel.onEvent(TaskListUiEvent.ApplyFilters) },
+                    onResetFilters = { viewModel.onEvent(TaskListUiEvent.ResetFilters) }
+                )
+            }
+        }
     }
 }
 
 
 @Composable
 fun TaskListBody(
-    innerPadding: PaddingValues,
     uiState: TaskListUIState,
     onTaskClick: (Int) -> Unit,
     onOrderChange: (String) -> Unit
@@ -102,15 +135,7 @@ fun TaskListBody(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(innerPadding)
-            .background(
-                Brush.verticalGradient(
-                    listOf(
-                        Color(34, 40, 49),
-                        Color(57, 62, 70)
-                    )
-                )
-            )
+
     ) {
         if (uiState.isLoading) {
             CircularProgressIndicator(
@@ -158,41 +183,42 @@ fun TaskItem(task: TaskEntity, labels: List<LabelEntity>, onTaskClick: (Int) -> 
     Column(
         modifier = Modifier
             .clip(RoundedCornerShape(12.dp))
-            .background(Color(44, 62, 80))
+            .background(MaterialTheme.colorScheme.primaryContainer)
             .clickable { onTaskClick(task.taskId!!) }
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        // Título de la tarea (resaltado)
         Text(
             text = task.title ?: "Untitled Task",
-            color = Color(0xFF007ACC), // Azul destacado
+            color = MaterialTheme.colorScheme.primary,
             style = MaterialTheme.typography.titleMedium
         )
 
-        // Fecha de vencimiento con colores dinámicos
         Text(
             text = "Due Date: " + formatDueDateAndTime(task.dueDate),
             color = dueDateColor,
             style = MaterialTheme.typography.bodyMedium
         )
 
-        // Descripción de la tarea
         Text(
             text = task.description ?: "No description available.",
-            color = Color.LightGray,
+            color = MaterialTheme.colorScheme.onPrimaryContainer,
             style = MaterialTheme.typography.bodySmall
         )
 
-        // Etiquetas (si las hay)
+        Text(
+            text = "Priority: ${getPriorityLabel(task.priority)}",
+            color = MaterialTheme.colorScheme.onPrimaryContainer,
+            style = MaterialTheme.typography.bodySmall
+        )
+
+
         if (labels.isNotEmpty()) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                labels.forEach { label ->
-                    LabelTag(label = label)
-                }
+                labels.forEach { label -> LabelTag(label = label) }
             }
         }
     }
@@ -203,7 +229,7 @@ fun LabelTag(label: LabelEntity) {
     val backgroundColor = try {
         Color(android.graphics.Color.parseColor(label.hexColor))
     } catch (e: IllegalArgumentException) {
-        Color.Gray
+        MaterialTheme.colorScheme.secondaryContainer
     }
 
     Box(
@@ -212,14 +238,30 @@ fun LabelTag(label: LabelEntity) {
             .background(backgroundColor)
             .padding(horizontal = 12.dp, vertical = 4.dp)
     ) {
-        Text(
-            text = label.description,
-            color = Color.White,
-            style = MaterialTheme.typography.bodySmall
-        )
+        Row {
+            Text(
+                text = label.description,
+                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                style = MaterialTheme.typography.bodySmall
+            )
+            Box(
+                modifier = Modifier
+                    .size(10.dp)
+                    .background(
+                        color = label.hexColor.hexToColor(),
+                        shape = CircleShape
+                    )
+                    .border(1.dp, Color.Black, CircleShape)
+                    .align(Alignment.CenterVertically)
+            )
+
+        }
+
     }
 }
 
+
+@Composable
 fun calculateDueDateColor(dueDate: Date): Color {
     val localDueDate = dueDate.toInstant()
         .atZone(ZoneId.systemDefault())
@@ -230,8 +272,8 @@ fun calculateDueDateColor(dueDate: Date): Color {
 
     return when {
         daysDifference <= 2 -> Color.Red
-        daysDifference <= 7 -> Color.Yellow
-        else -> Color.Green
+        daysDifference <= 7 -> Color(186, 142, 35)
+        else -> Color(65, 171, 39)
     }
 }
 
@@ -266,6 +308,21 @@ fun formatDueDateAndTime(dueDate: Date): String {
     val formatter =
         DateTimeFormatter.ofPattern("MMMM dd, yyyy hh:mm a")
     return localDateTime.format(formatter)
+}
+
+fun getPriorityLabel(priority: Int): String {
+    val priorityOptions: List<String> = listOf(
+        "Urgente",
+        "Alta",
+        "Media",
+        "Baja",
+        "Sin prisa"
+    )
+    return if (priority in priorityOptions.indices) {
+        priorityOptions[priority]
+    } else {
+        "Desconocido"
+    }
 }
 
 

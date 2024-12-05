@@ -26,7 +26,12 @@ data class TaskListUIState(
     ),
     val labels: List<LabelEntity> = emptyList(),
     val labelsSelected: List<LabelEntity> = emptyList(),
-    val labelsDescription: List<String> = emptyList()
+    val labelsDescription: List<String> = emptyList(),
+    val filtersApplied: Boolean = false,
+    val filteredTasks: List<Tasks> = emptyList(),
+    val searchQuery: String = "",
+    val titleError: String? = null,
+    val descriptionError: String? = null,
 )
 
 fun TaskListUIState.toEntity() = TaskEntity(
