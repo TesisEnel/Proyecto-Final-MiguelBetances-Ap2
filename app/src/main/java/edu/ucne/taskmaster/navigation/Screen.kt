@@ -20,6 +20,4 @@ sealed class Screen {
 
     @Serializable
     data object LoginScreen : Screen()
-
-
 }

@@ -1,6 +1,5 @@
 package edu.ucne.taskmaster.data.local.dao
 
-import androidx.paging.PagingSource
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
@@ -49,12 +48,22 @@ interface TaskDao {
 
     @Query(
         """
-        SELECT * FROM Tasks
-        ORDER BY TaskId ASC
-        LIMIT :limit OFFSET :offset
+        SELECT * 
+        FROM Tasks 
+        WHERE (:query = '' OR title LIKE '%' || :query || '%' OR description LIKE '%' || :query || '%')
         """
     )
-    fun getTasksPaging(limit: Int, offset: Int): PagingSource<Int, TaskEntity>
+    suspend fun searchTasks(query: String): List<TaskEntity>
+
+    @Query(
+        """
+        SELECT *
+        FROM Tasks
+        WHERE TaskId in (:ids) 
+        """
+    )
+    suspend fun getTaskById(ids: List<Int>): List<TaskEntity>
+
 }
 
 

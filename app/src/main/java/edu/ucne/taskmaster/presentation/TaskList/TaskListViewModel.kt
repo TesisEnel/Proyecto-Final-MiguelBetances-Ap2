@@ -3,6 +3,7 @@ package edu.ucne.taskmaster.presentation.TaskList
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import edu.ucne.taskmaster.data.local.entities.LabelEntity
 import edu.ucne.taskmaster.data.local.entities.TaskLabelEntity
 import edu.ucne.taskmaster.repository.LabelRepository
 import edu.ucne.taskmaster.repository.TaskLabelRepository
@@ -46,77 +47,43 @@ class TaskListViewModel @Inject constructor(
 
     fun onEvent(event: TaskListUiEvent) {
         when (event) {
-            is TaskListUiEvent.CreateDateChange -> {
-                _uiState.update { it.copy(createdDate = event.createdDate) }
-            }
-
-            is TaskListUiEvent.DescriptionChange -> {
-                _uiState.update { it.copy(description = event.description) }
-            }
-
-            is TaskListUiEvent.DueDateChange -> {
-                _uiState.update { it.copy(dueDate = event.dueDate) }
-            }
-
-            is TaskListUiEvent.PriorityChange -> {
-                _uiState.update { it.copy(priority = event.priority) }
-            }
-
-            is TaskListUiEvent.TitleChange -> {
-                _uiState.update { it.copy(title = event.title) }
+            is TaskListUiEvent.CreateDateChange -> _uiState.update { it.copy(createdDate = event.createdDate) }
+            is TaskListUiEvent.DescriptionChange -> _uiState.update { it.copy(description = event.description) }
+            is TaskListUiEvent.DueDateChange -> _uiState.update { it.copy(dueDate = event.dueDate) }
+            is TaskListUiEvent.PriorityChange -> _uiState.update { it.copy(priority = event.priority) }
+            is TaskListUiEvent.TitleChange -> _uiState.update { it.copy(title = event.title) }
+            is TaskListUiEvent.FilterLabelToggle -> {
+                filterLabelToggle(event.labelsSelected)
             }
 
             is TaskListUiEvent.LabelToggle -> {
-                val currentState = _uiState.value
-                if (currentState.labelsSelected.contains(event.labelsSelected)) {
-                    _uiState.value = currentState.copy(
-                        labelsSelected = currentState.labelsSelected - event.labelsSelected,
-                        labels = currentState.labels + event.labelsSelected
-                    )
-                } else {
-                    // Si la etiqueta no está seleccionada, se mueve a seleccionadas
-                    _uiState.value = currentState.copy(
-                        labelsSelected = currentState.labelsSelected + event.labelsSelected,
-                        labels = currentState.labels - event.labelsSelected
-                    )
-                }
+                labelToggle(event.labelsSelected)
+
             }
 
-            is TaskListUiEvent.GetTask -> {
-                getTask(event.id)
+            is TaskListUiEvent.GetTask -> getTask(event.id)
+            is TaskListUiEvent.SaveTask -> saveTask()
+            is TaskListUiEvent.GetLabels -> getLabels()
+            is TaskListUiEvent.DeleteTask -> deleteTask(event.id)
+            is TaskListUiEvent.GetTasks -> getTasks()
+            is TaskListUiEvent.OnOrderChange -> onOrderChange(event.order)
+            is TaskListUiEvent.GetLabelDescription -> getLabelDescription()
+            is TaskListUiEvent.SearchQueryChange -> {
+                onSearchQueryChange(event.query)
             }
 
-            is TaskListUiEvent.SaveTask -> {
-                saveTask()
-            }
-
-            is TaskListUiEvent.GetLabels -> {
-                getLabels()
-            }
-
-            is TaskListUiEvent.DeleteTask -> {
-                deleteTask(event.id)
-            }
-
-            is TaskListUiEvent.GetTasks -> {
-                getTasks()
-            }
-
-            is TaskListUiEvent.OnOrderChange -> {
-                onOrderChange(event.order)
-            }
-
-            is TaskListUiEvent.GetLabelDescription -> {
-                getLabelDescription()
-            }
+            is TaskListUiEvent.ResetFilters -> resetFilters()
+            is TaskListUiEvent.ApplyFilters -> applyFilters()
+            is TaskListUiEvent.Validate -> validate()
         }
     }
+
 
     private fun saveTask() {
         viewModelScope.launch {
             val task = _uiState.value.toEntity()
             val id = taskRepository.insertAndGetId(task)
-            taskLabelRepository.deleteTaskLabelRoom(id.toInt())
+            taskLabelRepository.deleteTaskLabelByTaskIdRoom(id.toInt())
             _uiState.value.labelsSelected.forEach { label ->
                 taskLabelRepository.saveTaskLabelRoom(
                     TaskLabelEntity(
@@ -143,7 +110,7 @@ class TaskListViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             taskRepository.deleteTaskRoom(id)
-            taskLabelRepository.deleteTaskLabelRoom(id)
+            taskLabelRepository.deleteTaskLabelByTaskIdRoom(id)
             _uiState.update { it.copy(isLoading = false) }
         }
     }
@@ -174,7 +141,7 @@ class TaskListViewModel @Inject constructor(
     private fun getTask(id: Int) {
         viewModelScope.launch {
             tasksRepository.getTaskWithRealLabelsById(id).let { tasks ->
-                val labels = _uiState.value.labels - tasks.labels
+                val labels = _uiState.value.labels - tasks.labels.toSet()
                 _uiState.update {
                     it.copy(
                         isLoading = false,
@@ -239,6 +206,74 @@ class TaskListViewModel @Inject constructor(
         }
     }
 
+    private fun filterLabelToggle(label: LabelEntity) {
+        val currentLabels = _uiState.value.labelsSelected.toMutableList()
+        if (currentLabels.contains(label)) {
+            currentLabels.remove(label)
+        } else {
+            currentLabels.add(label)
+        }
+        _uiState.update { it.copy(labelsSelected = currentLabels) }
+        applyFilters()
+    }
+
+
+    private fun applyFilters() {
+        viewModelScope.launch {
+            val query = _uiState.value.description
+            val selectedLabels = _uiState.value.labelsSelected.map { it.id }
+
+            val filteredTasks = tasksRepository.searchTasksWithRealLabels(query).filter { task ->
+                selectedLabels.isEmpty() || task.labels.any { it.id in selectedLabels }
+            }
+
+            _uiState.update { it.copy(tasks = filteredTasks) }
+        }
+    }
+
+    private fun resetFilters() {
+        _uiState.update {
+            it.copy(
+                description = "",
+                labelsSelected = emptyList()
+            )
+        }
+        applyFilters()
+    }
+
+    private fun labelToggle(labelsSelected: LabelEntity) {
+        if (_uiState.value.labelsSelected.contains(labelsSelected)) {
+            _uiState.value = _uiState.value.copy(
+                labelsSelected = _uiState.value.labelsSelected - labelsSelected,
+                labels = _uiState.value.labels + labelsSelected
+            )
+        } else {
+            _uiState.value = _uiState.value.copy(
+                labelsSelected = _uiState.value.labelsSelected + labelsSelected,
+                labels = _uiState.value.labels - labelsSelected
+            )
+        }
+    }
+
+
+    private fun onSearchQueryChange(query: String) {
+        _uiState.update { it.copy(description = query) }
+        applyFilters()
+    }
+
+    private fun validate() {
+        val titleError =
+            if (_uiState.value.title.isBlank()) "El título no puede estar vacío" else null
+        val descriptionError =
+            if (_uiState.value.description.isBlank()) "La descripción no puede estar vacía" else null
+
+        _uiState.update {
+            it.copy(
+                titleError = titleError,
+                descriptionError = descriptionError,
+            )
+        }
+    }
 }
 
 

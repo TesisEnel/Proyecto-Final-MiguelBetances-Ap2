@@ -17,6 +17,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -25,10 +26,14 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -41,10 +46,10 @@ import edu.ucne.taskmaster.util.hexToColor
 @OptIn(ExperimentalMaterial3Api::class)
 fun LabelListScreen(
     viewModel: LabelViewModel = hiltViewModel(),
-    onAddLabel: () -> Unit,
-
-    ) {
+    onAddLabel: () -> Unit
+) {
     val uiState by viewModel.uiState.collectAsState()
+    var labelToDelete by remember { mutableStateOf<LabelEntity?>(null) } // State for selected label to delete
 
     Scaffold(
         topBar = {
@@ -77,13 +82,36 @@ fun LabelListScreen(
                         items(uiState.labels) { label ->
                             LabelItem(
                                 label = label,
-                                onDelete = { viewModel.deleteLabel(label.id!!) })
+                                onDelete = { labelToDelete = label }
+                            )
                         }
                     }
                 }
             }
         }
     )
+
+    // Confirmation Dialog
+    if (labelToDelete != null) {
+        AlertDialog(
+            onDismissRequest = { labelToDelete = null },
+            title = { Text("Confirm Delete") },
+            text = { Text("Are you sure you want to delete the label '${labelToDelete?.description}'? This action cannot be undone.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.deleteLabel(labelToDelete!!.id!!)
+                    labelToDelete = null // Reset the selected label
+                }) {
+                    Text("Delete")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { labelToDelete = null }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
 }
 
 @Composable
@@ -110,17 +138,17 @@ fun LabelItem(
                     Text(
                         text = label.description,
                         style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.weight(1f) // Ensures the text takes up available space
+                        modifier = Modifier.weight(1f)
                     )
 
                     Box(
                         modifier = Modifier
-                            .size(24.dp) // Size of the color circle
+                            .size(24.dp)
                             .background(
-                                color = label.hexColor.hexToColor(), // Convert hex to Color directly
+                                color = label.hexColor.hexToColor(),
                                 shape = CircleShape
                             )
-                            .border(1.dp, Color.Black, CircleShape) // Optional border for clarity
+                            .border(1.dp, Color.Black, CircleShape)
                     )
                 }
             }

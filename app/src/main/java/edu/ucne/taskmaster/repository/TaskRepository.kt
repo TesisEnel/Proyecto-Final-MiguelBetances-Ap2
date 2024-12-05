@@ -22,7 +22,11 @@ class TaskRepository @Inject constructor(
         taskDao.save(taskEntity)
     }
 
+    suspend fun getTaskByIdRoom(ids: List<Int>) = taskDao.getTaskById(ids)
+
     suspend fun getTaskRoom() = taskDao.getAllTask()
+
+    suspend fun searchTaskRoom(query: String) = taskDao.searchTasks(query)
 
     suspend fun getTaskRoomById(id: Int) = taskDao.getTask(id)
 

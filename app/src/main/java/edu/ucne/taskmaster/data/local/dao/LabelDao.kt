@@ -25,6 +25,10 @@ interface LabelDao {
     @Delete
     suspend fun delete(label: LabelEntity)
 
+    @Query("DELETE FROM Label WHERE id = :id")
+    suspend fun delete(id: Int)
+
+
     @Query("Select DISTINCT description FROM Label")
     suspend fun getLabelDescription(): List<String>
 

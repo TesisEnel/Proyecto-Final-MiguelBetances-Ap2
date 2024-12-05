@@ -14,5 +14,15 @@ interface TaskLabelDao {
     suspend fun save(taskLabel: TaskLabelEntity)
 
     @Query("DELETE FROM LabelTasks WHERE taskId = :taskId")
-    suspend fun deleteTaskLabels(taskId: Int)
+    suspend fun deleteTaskLabelsByTaskId(taskId: Int)
+
+    @Query("DELETE FROM LabelTasks WHERE labelId = :labelId")
+    suspend fun deleteTaskLabelsByLabelId(labelId: Int)
+
+    @Query(
+        """
+        SELECT * FROM labeltasks
+        """
+    )
+    suspend fun getAllTaskLabel(): List<TaskLabelEntity>
 }
