@@ -62,9 +62,11 @@ class CalendarViewModel @Inject constructor(
             _uiState.update {
                 it.copy(
                     selectedDate = selectedDate,
-                    yearMonth = YearMonth.of(year, month)
+                    yearMonth = YearMonth.of(year, month),
+                    dates = dataSource.getDates(YearMonth.of(year, month), _tasks.value)
                 )
             }
+
         }
     }
 
