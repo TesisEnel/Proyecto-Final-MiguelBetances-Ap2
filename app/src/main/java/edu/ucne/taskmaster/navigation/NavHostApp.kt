@@ -5,7 +5,6 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.material3.DrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -30,8 +29,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun NavHostApp(
     navHostController: NavHostController,
-    drawerState: DrawerState,
-    googleAuthUiClient: GoogleAuthUiClient
+    googleAuthUiClient: GoogleAuthUiClient,
+    onScreenChange: () -> Unit
 ) {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
@@ -40,8 +39,10 @@ fun NavHostApp(
         navController = navHostController,
         startDestination = Screen.LoginScreen
     ) {
+
         composable<Screen.Calendar> {
             CalendarScreen()
+            onScreenChange()
         }
         composable<Screen.TaskList> {
             TaskListScreen(
@@ -50,7 +51,7 @@ fun NavHostApp(
                 },
                 onTaskClick = {
                     navHostController.navigate(Screen.Task(it))
-                }
+                },
             )
         }
 
@@ -115,7 +116,7 @@ fun NavHostApp(
             }
 
             LoginScreen(
-                onLoginClicked = {},
+                onLoginClicked = { navHostController.navigate(Screen.Calendar) },
                 onGoogleSignInClicked = {
                     scope.launch {
                         val signInIntentSender = googleAuthUiClient.signIn()
@@ -124,11 +125,12 @@ fun NavHostApp(
                                 signInIntentSender ?: return@launch
                             ).build()
                         )
+                        if (state.isSignInSuccessful)
+                            navHostController.navigate(Screen.Calendar)
                     }
                 }
             )
         }
-
 
     }
 }

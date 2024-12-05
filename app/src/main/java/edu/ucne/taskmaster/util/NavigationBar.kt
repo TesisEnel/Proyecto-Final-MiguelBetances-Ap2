@@ -29,6 +29,7 @@ data class NavigationItem(
 @Composable
 fun BottomNavigationBar(
     navController: NavHostController,
+    showBottomBar: Boolean,
     content: @Composable () -> Unit
 ) {
     val items = listOf(
@@ -55,27 +56,31 @@ fun BottomNavigationBar(
             content()
         }
 
-        NavigationBar {
-            items.forEachIndexed { index, item ->
-                NavigationBarItem(
-                    icon = {
-                        Icon(
-                            imageVector = if (selectedItem == index) item.selectedIcon else item.unselectedIcon,
-                            contentDescription = item.title
-                        )
-                    },
-                    label = { Text(text = item.title) },
-                    selected = selectedItem == index,
-                    onClick = {
-                        selectedItem = index
-                        when (item.title) {
-                            "Calendar" -> navController.navigate(Screen.Calendar)
-                            "Tasks" -> navController.navigate(Screen.TaskList)
-                            "Labels" -> navController.navigate(Screen.LabelList)
+        // Renderiza la BottomNavigationBar solo si `showBottomBar` es true
+        if (showBottomBar) {
+            NavigationBar {
+                items.forEachIndexed { index, item ->
+                    NavigationBarItem(
+                        icon = {
+                            Icon(
+                                imageVector = if (selectedItem == index) item.selectedIcon else item.unselectedIcon,
+                                contentDescription = item.title
+                            )
+                        },
+                        label = { Text(text = item.title) },
+                        selected = selectedItem == index,
+                        onClick = {
+                            selectedItem = index
+                            when (item.title) {
+                                "Calendar" -> navController.navigate(Screen.Calendar)
+                                "Tasks" -> navController.navigate(Screen.TaskList)
+                                "Labels" -> navController.navigate(Screen.LabelList)
+                            }
                         }
-                    }
-                )
+                    )
+                }
             }
         }
     }
 }
+

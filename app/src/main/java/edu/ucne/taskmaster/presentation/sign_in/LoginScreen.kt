@@ -1,6 +1,8 @@
 package edu.ucne.taskmaster.presentation.sign_in
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -49,6 +51,21 @@ fun LoginScreen(
             .padding(16.dp),
         verticalArrangement = Arrangement.Center
     ) {
+        Box(
+            modifier = Modifier
+                .size(250.dp)
+                .align(Alignment.CenterHorizontally)
+        ) {
+            val logo: Painter = painterResource(
+                id =
+                R.drawable.whatsapp_image_2024_12_04_at_17_53_14_8523d8cc
+            )
+            Icon(
+                painter = logo,
+                contentDescription = "Logo",
+                tint = Color.Unspecified
+            )
+        }
         Text(
             text = "Iniciar Sesión",
             style = MaterialTheme.typography.headlineMedium,
@@ -90,6 +107,17 @@ fun LoginScreen(
             onClick = onGoogleSignInClicked,
             modifier = Modifier.fillMaxWidth()
         )
+
+        Text(
+            text = "No ingresar",
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier
+                .padding(top = 16.dp)
+                .align(Alignment.CenterHorizontally)
+                .clickable { onLoginClicked() }
+        )
+
+
     }
 }
 
