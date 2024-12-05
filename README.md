@@ -1,3 +1,6 @@
+### *Indicar Integrantes*
+- Miguel Angel Betances Beato
+  
 ### *TaskMaster*
 
 *TaskMaster* es una aplicación moderna de gestión de tareas que combina un diseño intuitivo con funcionalidades avanzadas para ayudarte a organizar tus pendientes de manera eficiente. Con soporte para etiquetas personalizables y filtros avanzados, TaskMaster está diseñado para simplificar tu vida y aumentar tu productividad.
