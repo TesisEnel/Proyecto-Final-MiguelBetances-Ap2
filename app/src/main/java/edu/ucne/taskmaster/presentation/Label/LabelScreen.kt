@@ -2,7 +2,6 @@ package edu.ucne.taskmaster.presentation.Label
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -39,8 +38,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import edu.ucne.taskmaster.util.HueBar
 import edu.ucne.taskmaster.util.hexToColor
 import edu.ucne.taskmaster.util.toHexString
-
-// Package and imports remain the same
 
 @Composable
 fun LabelScreen(
@@ -90,8 +87,11 @@ private fun LabelScreen(
             Column {
                 Button(
                     onClick = {
-                        onEvent(LabelUiEvent.SaveLabel)
-                        goBack()
+                        onEvent(LabelUiEvent.Validate)
+                        if (uiState.description != "") {
+                            onEvent(LabelUiEvent.SaveLabel)
+                            goBack()
+                        }
                     },
                     modifier = Modifier.padding(16.dp)
                 ) {
@@ -132,13 +132,19 @@ private fun LabelScreen(
                     onValueChange = { onEvent(LabelUiEvent.DescriptionChange(it)) },
                     modifier = Modifier.fillMaxWidth()
                 )
+                if (uiState.descriptionError != null) {
+                    Text(
+                        text = uiState.descriptionError,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
             }
             item {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clearAndSetSemantics { }
-                        .clickable { /* Expand color picker if necessary */ },
+                        .clearAndSetSemantics { },
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {

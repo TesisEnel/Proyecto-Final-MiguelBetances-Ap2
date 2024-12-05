@@ -21,6 +21,7 @@ class LabelRepository @Inject constructor(
     suspend fun getLabelRoom(id: Int) = labelDao.getLabel(id = id) ?: LabelEntity(id = 0)
     suspend fun getLabelsRoom() = labelDao.getAll()
     suspend fun getLabelDescription() = labelDao.getLabelDescription()
+    suspend fun deleteLabelRoom(id: Int) = labelDao.delete(id)
 
 
     fun getLabels(): Flow<Resource<List<LabelEntity>>> = flow {

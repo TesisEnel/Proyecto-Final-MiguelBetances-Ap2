@@ -9,4 +9,5 @@ sealed interface LabelUiEvent {
     data object SaveLabel : LabelUiEvent
     data class DeleteLabel(val id: Int) : LabelUiEvent
     data object GetLabels : LabelUiEvent
+    data object Validate : LabelUiEvent
 }

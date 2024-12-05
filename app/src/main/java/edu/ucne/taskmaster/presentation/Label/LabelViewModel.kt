@@ -6,6 +6,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import edu.ucne.taskmaster.remote.dto.LabelDto
 import edu.ucne.taskmaster.remote.dto.toLabelEntity
 import edu.ucne.taskmaster.repository.LabelRepository
+import edu.ucne.taskmaster.repository.TaskLabelRepository
 import edu.ucne.taskmaster.util.Resource
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -16,7 +17,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class LabelViewModel @Inject constructor(
-    private val labelRepository: LabelRepository
+    private val labelRepository: LabelRepository,
+    private val taskLabelRepository: TaskLabelRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LabelUiState())
@@ -29,7 +31,7 @@ class LabelViewModel @Inject constructor(
     fun onEvent(event: LabelUiEvent) {
         when (event) {
             is LabelUiEvent.SaveLabel -> {
-                savelavelRoom()
+                saveLabelRoom()
             }
 
             is LabelUiEvent.DeleteLabel -> {
@@ -52,6 +54,10 @@ class LabelViewModel @Inject constructor(
 
             is LabelUiEvent.GetLabels -> {
                 loadLabelsFromRoom()
+            }
+
+            is LabelUiEvent.Validate -> {
+                validate()
             }
         }
     }
@@ -99,7 +105,7 @@ class LabelViewModel @Inject constructor(
         }
     }
 
-    private fun savelavelRoom() {
+    private fun saveLabelRoom() {
         viewModelScope.launch {
             val labelDto = LabelDto(
                 description = _uiState.value.description,
@@ -144,47 +150,30 @@ class LabelViewModel @Inject constructor(
 
     fun deleteLabel(id: Int) {
         viewModelScope.launch {
-            val result = labelRepository.deleteLabel(id)
-            if (result is Resource.Error) {
-                _uiState.update {
-                    it.copy(
-                        error = result.message ?: "Error deleting label"
-                    )
-                }
-            } else {
-                onEvent(LabelUiEvent.GetLabels)
-            }
+            labelRepository.deleteLabelRoom(id)
+            taskLabelRepository.deleteTaskLabelByLabelIdRoom(id)
         }
     }
 
     private fun getLabel(id: Int) {
         viewModelScope.launch {
-            labelRepository.getLabel(id).collectLatest { result ->
-                when (result) {
-                    is Resource.Loading -> {
-                        _uiState.update { it.copy(isLoading = true) }
-                    }
-
-                    is Resource.Success -> {
-                        _uiState.update {
-                            it.copy(
-                                isLoading = false,
-                                description = result.data?.description ?: "",
-                                hexColor = result.data?.hexColor ?: "#FFFFFF"
-                            )
-                        }
-                    }
-
-                    is Resource.Error -> {
-                        _uiState.update {
-                            it.copy(
-                                isLoading = false,
-                                error = result.message ?: "Error loading label"
-                            )
-                        }
-                    }
-                }
+            val label = labelRepository.getLabelRoom(id)
+            _uiState.update {
+                it.copy(
+                    id = label.id!!,
+                    description = label.description,
+                    hexColor = label.hexColor
+                )
             }
         }
     }
+
+    private fun validate() {
+        _uiState.update {
+            it.copy(
+                descriptionError = if (_uiState.value.description.isBlank()) "La descripción es necesaria" else null
+            )
+        }
+    }
 }
+
